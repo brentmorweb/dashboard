@@ -77,9 +77,6 @@
     .layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 64px); }
 
     nav[aria-label="Primary"] { border-right: 1px solid var(--border); background: var(--surface); }
-    .nav-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1rem .5rem; }
-    .sidebar-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: .4rem .6rem; cursor: pointer; }
-
     .nav { display: grid; gap: .25rem; padding: .5rem; }
     .nav button { appearance: none; border: none; background: transparent; text-align: left; padding: .75rem .75rem; border-radius: 10px; display: flex; align-items: center; gap: .75rem; color: var(--text-subtle); font-weight: 600; cursor: pointer; }
     .nav button:hover { background: var(--surface-alt); color: var(--text); }
@@ -171,10 +168,6 @@
 
   <div class="layout">
     <nav aria-label="Primary">
-      <div class="nav-header">
-        <strong class="sr-only">Primary navigation</strong>
-        <button class="sidebar-toggle" id="toggleSidebar" aria-pressed="false" aria-label="Collapse sidebar"><i class="fas fa-bars"></i></button>
-      </div>
       <div class="nav" id="nav">
         <button aria-current="page"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></button>
         <button><i class="fas fa-file-alt"></i> <span>Pages</span></button>
@@ -367,21 +360,6 @@
   <div class="toast" role="status" aria-live="polite" id="toast">Copied link to clipboard</div>
 
   <script>
-    // Sidebar collapse with persistence
-    (function(){
-      const btn = document.getElementById('toggleSidebar');
-      const root = document.querySelector('.layout');
-      const KEY = 'mw_sidebar_collapsed_v1';
-      const collapsed = localStorage.getItem(KEY) === '1';
-      if (collapsed) document.documentElement.style.setProperty('--sidebar-width','72px');
-      btn.addEventListener('click', () => {
-        const isCollapsed = localStorage.getItem(KEY) === '1';
-        localStorage.setItem(KEY, isCollapsed ? '0' : '1');
-        document.documentElement.style.setProperty('--sidebar-width', isCollapsed ? '260px' : '72px');
-        btn.setAttribute('aria-pressed', String(!isCollapsed));
-      });
-    })();
-
     // Search suggestions: basic a11y behavior
     (function(){
       const input = document.getElementById('q');
