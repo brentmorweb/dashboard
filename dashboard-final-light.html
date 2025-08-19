@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>MORWEB</title>
+  <!-- Fonts: system stack first for performance; optional Montserrat headings -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+  <!-- Icons (optional): fontawesome; consider replacing with SVG sprite in production -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    /* ==========================================
+       Design tokens / Theme
+    ========================================== */
+    :root {
+      --bg: #ffffff;
+      --bg-subtle: #f7f7f7;
+      --surface: #ffffff;
+      --surface-alt: #fafafa;
+      --border: #e6e6e6;
+      --text: #151515;
+      --text-subtle: #6b7280;
+      --brand: #2563eb;
+      --brand-contrast: #ffffff;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --bad: #dc2626;
+      --info: #2563eb;
+      --focus: 2px solid #2563eb;
+      --radius-lg: 12px;
+      --radius-md: 8px;
+      --shadow-1: 0 1px 3px rgba(0,0,0,.06);
+      --shadow-2: 0 8px 25px rgba(0,0,0,.08);
+      --font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      --font-heading: "Montserrat", var(--font-sans);
+    }
+
+
+    /* Basic reset */
+    *, *::before, *::after { box-sizing: border-box; }
+    html:focus-within { scroll-behavior: smooth; }
+    body { margin: 0; font-family: var(--font-sans); background: var(--bg); color: var(--text); line-height: 1.6; }
+
+    /* Accessibility helpers */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    a, button { outline-offset: 2px; }
+    :focus-visible { outline: var(--focus); border-radius: 6px; }
+
+    /* Layout */
+    .skip-link { position: absolute; left: -9999px; top: 0; background: var(--brand); color: var(--brand-contrast); padding: .5rem .75rem; z-index: 10000; }
+    .skip-link:focus { left: .5rem; top: .5rem; }
+
+    header[role="banner"] { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: var(--shadow-1); }
+    .header-inner { display: grid; grid-template-columns: 1fr minmax(280px,700px) 1fr; align-items: center; gap: 1rem; padding: 1rem 1.25rem; }
+    .brand { font-family: var(--font-heading); font-weight: 700; letter-spacing: .2px; }
+
+    .user { justify-self: end; display: inline-flex; align-items: center; gap: .75rem; color: var(--text-subtle); font-weight: 600; }
+    .avatar { width: 40px; height: 40px; border-radius: 10px; background: var(--brand); color: var(--brand-contrast); display: grid; place-items: center; font-weight: 700; }
+
+    .layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 64px); }
+
+    nav[aria-label="Primary"] { border-right: 1px solid var(--border); background: var(--surface); }
+    .nav { display: grid; gap: .25rem; padding: .5rem; }
+    .nav button { appearance: none; border: none; background: transparent; text-align: left; padding: .75rem .75rem; border-radius: 10px; display: flex; align-items: center; gap: .75rem; color: var(--text-subtle); font-weight: 600; cursor: pointer; }
+    .nav button:hover { background: var(--surface-alt); color: var(--text); }
+    .nav button[aria-current="page"] { background: var(--bg-subtle); color: var(--text); border-left: 3px solid var(--brand); }
+    .nav i { width: 20px; text-align: center; }
+
+    main { padding: 1.25rem; }
+
+    /* Search */
+    .search { position: relative; }
+    .search input { width: 100%; padding: .75rem .875rem .75rem 2.5rem; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-subtle); font: inherit; color: var(--text); }
+    .search input::placeholder { color: var(--text-subtle); }
+    .search .icon { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); color: var(--text-subtle); }
+    .suggestions { position: absolute; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-2); margin-top: .4rem; display: none; }
+    .suggestions[aria-expanded="true"] { display: block; }
+    .suggestions button { width: 100%; text-align: left; padding: .75rem .875rem; border: 0; background: transparent; cursor: pointer; color: var(--text-subtle); }
+    .suggestions button:hover, .suggestions button[aria-selected="true"] { background: var(--surface-alt); color: var(--text); }
+
+    /* Cards */
+    .grid { display: grid; gap: 1.25rem; }
+    .grid.stats { grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); }
+    .grid.two { grid-template-columns: 2fr 1fr; }
+    .grid.three { grid-template-columns: repeat(3,1fr); }
+    @media (max-width: 960px) { .layout { grid-template-columns: 72px 1fr; } .grid.two { grid-template-columns: 1fr; } .grid.three { grid-template-columns: 1fr; } .nav button span { display: none; } }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; box-shadow: var(--shadow-1); }
+    .card .card-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+    .card h2, .card h3 { font-family: var(--font-heading); font-weight: 700; font-size: 1.125rem; margin: 0; }
+
+    /* Stat */
+    .stat { position: relative; padding: 1rem; border-radius: 12px; transition: transform .2s ease, box-shadow .2s ease; cursor: pointer; }
+    @media (prefers-reduced-motion: reduce) { .stat { transition: none; } }
+    .stat:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); }
+    .stat .label { text-transform: uppercase; letter-spacing: .6px; font-size: .8rem; color: var(--text-subtle); font-weight: 700; }
+    .stat .value { font-size: clamp(1.6rem, 1.1rem + 2vw, 2.4rem); font-weight: 800; margin-top: .25rem; }
+    .stat .delta { margin-top: .4rem; font-weight: 700; font-size: .85rem; }
+    .delta.pos { color: var(--ok); } .delta.neg { color: var(--bad); }
+    .stat-sparkline, .stat-mini-chart { margin-top: .5rem; font-size: .85rem; color: var(--text-subtle); }
+    .stat-mini-chart { font-family: monospace; letter-spacing: 1px; }
+    .stat-sparkline i { margin-right: .25rem; }
+
+    /* Progress bars */
+    .bar { height: 6px; background: var(--surface-alt); border-radius: 999px; overflow: hidden; }
+    .bar > span { display: block; height: 100%; background: var(--brand); transform-origin: left center; transition: width .5s ease; }
+
+    /* Activity list */
+    .list { list-style: none; margin: 0; padding: 0; }
+    .list li { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: .75rem; padding: .75rem 0; border-bottom: 1px solid var(--border); }
+    .list li:last-child { border-bottom: 0; }
+    .pill { border-radius: 999px; font-size: .75rem; padding: .25rem .5rem; font-weight: 700; }
+    .pill.ok { background: #dcfce7; color: var(--ok);} 
+    .pill.warn { background: #fef3c7; color: #b45309; }
+    .pill.bad { background: #fee2e2; color: var(--bad); }
+
+    /* Chart placeholder (progressively enhanced later) */
+    .chart { height: 300px; display: grid; place-items: center; background: var(--surface-alt); border: 2px dashed var(--border); border-radius: 10px; color: var(--text-subtle); }
+
+    /* Quick actions */
+    .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: .75rem; }
+    .btn { display: inline-flex; align-items: center; gap: .5rem; justify-content: center; text-decoration: none; font-weight: 700; padding: .75rem 1rem; border-radius: 10px; border: 1px solid var(--border); color: var(--text); background: var(--surface); }
+    .btn:hover { background: var(--bg-subtle); }
+    .btn.primary { background: var(--brand); color: var(--brand-contrast); border-color: var(--brand); }
+    .btn.primary:hover { filter: brightness(.95); }
+
+    /* Toast (example for AI suggestions or success) */
+    .toast { position: fixed; right: 1rem; bottom: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: .75rem 1rem; box-shadow: var(--shadow-2); display: none; }
+    .toast[data-show="true"] { display: block; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header role="banner" aria-label="Top bar">
+    <div class="header-inner">
+      <div class="brand" aria-label="MORWEB">MORWEB</div>
+      <div class="search" role="search">
+        <i class="icon fas fa-robot" aria-hidden="true"></i>
+        <label for="q" class="sr-only">Ask AI about your site</label>
+        <input id="q" name="q" type="search" placeholder="Ask AI anything about your site…" autocomplete="off" aria-controls="sug" aria-expanded="false" aria-autocomplete="list" />
+        <div id="sug" class="suggestions" role="listbox" aria-expanded="false">
+          <button role="option" id="sug-1">💡 How can I increase donations?</button>
+          <button role="option" id="sug-2">📈 Show me my top performing pages</button>
+          <button role="option" id="sug-3">🎯 Create a volunteer recruitment strategy</button>
+        </div>
+      </div>
+      <div class="user">
+        <span aria-live="polite">Springfield Community Foundation</span>
+        <div class="avatar" aria-hidden="true">SF</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav aria-label="Primary">
+      <div class="nav" id="nav">
+        <button aria-current="page"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></button>
+        <button><i class="fas fa-file-alt"></i> <span>Pages</span></button>
+        <button><i class="fas fa-calendar-alt"></i> <span>Events</span></button>
+        <button><i class="fas fa-newspaper"></i> <span>News & Blog</span></button>
+        <button><i class="fas fa-images"></i> <span>Media</span></button>
+        <button><i class="fas fa-heart"></i> <span>Donations</span></button>
+        <button><i class="fas fa-users"></i> <span>Members</span></button>
+        <button><i class="fas fa-chart-line"></i> <span>Analytics</span></button>
+        <button><i class="fas fa-search"></i> <span>SEO</span></button>
+        <button><i class="fas fa-universal-access"></i> <span>Accessibility</span></button>
+        <button><i class="fas fa-cog"></i> <span>Settings</span></button>
+        <button><i class="fas fa-life-ring"></i> <span>Support</span></button>
+      </div>
+    </nav>
+
+    <main id="main" tabindex="-1">
+      <!-- Welcome / AI insight -->
+      <section class="card" aria-labelledby="welcome-title">
+        <div class="card-head">
+          <h2 id="welcome-title">Good morning, Springfield Community Foundation! ⭐</h2>
+          <span class="pill ok" aria-label="Performance up 12%">+12% traffic</span>
+        </div>
+        <p>Your website is performing excellently today. Traffic is up 12% and you've received 3 new donations since yesterday.</p>
+        <aside class="card" style="margin-top:.75rem" aria-label="AI insight">
+          <div class="card-head">
+            <h3 style="margin:0">AI Insight</h3>
+            <span class="pill ok">Actionable</span>
+          </div>
+          <p>Your "Volunteer Opportunities" page has high engagement but low conversions. Consider adding a prominent call‑to‑action button.</p>
+        </aside>
+      </section>
+
+      <!-- Stats -->
+      <section aria-labelledby="overview" style="margin-top:1rem">
+        <h2 id="overview" class="sr-only">Key metrics</h2>
+        <div class="grid stats">
+          <article class="card stat" tabindex="0" aria-describedby="visitors-lbl visitors-val visitors-delta">
+            <div id="visitors-lbl" class="label">Monthly Visitors</div>
+            <div id="visitors-val" class="value">2,847</div>
+            <div id="visitors-delta" class="delta pos"><i class="fas fa-arrow-up" aria-hidden="true"></i> 12% from last month</div>
+            <div class="bar" aria-hidden="true"><span style="width:62%"></span></div>
+          <div class="stat-sparkline"><i class="fas fa-chart-line" aria-hidden="true"></i> Live tracking</div>
+          </article>
+          <article class="card stat" tabindex="0">
+            <div class="label">Form Submissions</div>
+            <div class="value">156</div>
+            <div class="delta pos"><i class="fas fa-arrow-up" aria-hidden="true"></i> 8% from last month</div>
+          <div class="stat-mini-chart">▂▃▅▆▅▇▆</div>
+          </article>
+          <article class="card stat" tabindex="0">
+            <div class="label">Online Donations</div>
+            <div class="value">$12,450</div>
+            <div class="delta pos"><i class="fas fa-arrow-up" aria-hidden="true"></i> 23% from last month</div>
+            <div class="bar" role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100" aria-label="Monthly donation goal reached 62%"><span style="width:62%"></span></div>
+            <small class="sr-only">62% of monthly goal ($20k)</small>
+          </article>
+          <article class="card stat" tabindex="0">
+            <div class="label">Event Registrations</div>
+            <div class="value">43</div>
+            <div class="delta neg"><i class="fas fa-arrow-down" aria-hidden="true"></i> 5% from last month</div>
+            <p aria-live="polite" style="margin:.5rem 0 0;color:var(--text-subtle)"><i class="fas fa-calendar-alt" aria-hidden="true"></i> Annual Gala in 18 days</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- Chart + Activity -->
+      <section class="grid two" style="margin-top:1rem">
+        <article class="card" aria-labelledby="traffic-title">
+          <div class="card-head">
+            <h3 id="traffic-title">Website Traffic (Last 30 Days)</h3>
+            <div role="group" aria-label="Range">
+              <button class="btn" data-range="7">7D</button>
+              <button class="btn primary" data-range="30" aria-pressed="true">30D</button>
+              <button class="btn" data-range="90">90D</button>
+            </div>
+          </div>
+          <figure class="chart" aria-label="Interactive traffic visualization" id="trafficChart">Interactive Traffic Visualization</figure>
+        </article>
+
+        <aside class="card" aria-labelledby="activity-title">
+          <div class="card-head"><h3 id="activity-title">Smart Activity Feed</h3><span class="pill ok"><i class="fas fa-robot" aria-hidden="true"></i> AI Powered</span></div>
+          <ul class="list" aria-live="polite">
+            <li>
+              <div class="avatar" aria-hidden="true" style="background:var(--bad)"><i class="fas fa-fire"></i></div>
+              <div>
+                <div><strong>Trending:</strong> "Community Impact 2024" post gaining momentum</div>
+                <small style="color:var(--text-subtle)">2 hours ago • 156% above avg</small>
+              </div>
+              <span class="pill bad">Hot</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-dollar-sign"></i></div>
+              <div>
+                <div>Major donation: $500 from John Smith</div>
+                <small style="color:var(--text-subtle)">4 hours ago • Recurring donor</small>
+              </div>
+              <span class="pill ok">Donation</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-calendar-plus"></i></div>
+              <div>
+                <div>Gala registrations surge: 5 new sign-ups</div>
+                <small style="color:var(--text-subtle)">1 day ago • 73% capacity</small>
+              </div>
+              <span class="pill ok">+5</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-robot"></i></div>
+              <div>
+                <div>AI Suggestion: Share your impact story on social media</div>
+                <small style="color:var(--text-subtle)">Based on current trends</small>
+              </div>
+              <span class="pill ok">AI</span>
+            </li>
+          </ul>
+        </aside>
+      </section>
+
+      <!-- Content / Leaders / Events / etc. (condensed example) -->
+      <section class="grid three" style="margin-top:1rem">
+        <article class="card" aria-labelledby="content-health"><div class="card-head"><h3 id="content-health">Content Health Monitor</h3></div>
+          <ul class="list">
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-file-alt"></i></div>
+              <div>
+                <div>About Us Page</div>
+                <small style="color:var(--text-subtle)">Last updated 45 days ago</small>
+              </div>
+              <span class="pill bad">Urgent</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-calendar"></i></div>
+              <div>
+                <div>Upcoming Events</div>
+                <small style="color:var(--text-subtle)">SEO optimized • Mobile friendly</small>
+              </div>
+              <span class="pill ok">Live</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-edit"></i></div>
+              <div>
+                <div>Board Meeting Minutes</div>
+                <small style="color:var(--text-subtle)">Awaiting board approval</small>
+              </div>
+              <span class="pill warn">Review</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true" style="background:var(--bad)"><i class="fas fa-fire"></i></div>
+              <div>
+                <div>Annual Report 2024</div>
+                <small style="color:var(--text-subtle)">Trending • 89% engagement</small>
+              </div>
+              <span class="pill ok">Hot</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-robot"></i></div>
+              <div>
+                <div>AI Suggested: Impact Stories Page</div>
+                <small style="color:var(--text-subtle)">Based on donor behavior analysis</small>
+              </div>
+              <span class="pill ok">Create</span>
+            </li>
+          </ul>
+        </article>
+
+        <article class="card" aria-labelledby="leaders"><div class="card-head"><h3 id="leaders">Traffic Leaders</h3><span class="pill ok">+15% this week</span></div>
+          <ul class="list">
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-bullseye"></i></div>
+              <div>
+                <strong>Annual Gala Information</strong><br>
+                <small style="color:var(--text-subtle)">2,340 views • 8.2% conversion</small>
+              </div>
+              <span class="pill ok">A+</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-dollar-sign"></i></div>
+              <div>
+                <strong>Donate Now</strong><br>
+                <small style="color:var(--text-subtle)">1,892 views • 12.4% conversion</small>
+              </div>
+              <span class="pill ok">A</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-book-open"></i></div>
+              <div>
+                <strong>About Our Mission</strong><br>
+                <small style="color:var(--text-subtle)">1,456 views • 6.1% engagement</small>
+              </div>
+              <span class="pill ok">B+</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-exclamation-triangle"></i></div>
+              <div>
+                <strong>Volunteer Opportunities</strong><br>
+                <small style="color:var(--text-subtle)">987 views • Low conversion</small>
+              </div>
+              <span class="pill warn">C</span>
+            </li>
+          </ul>
+        </article>
+
+        <article class="card" aria-labelledby="events"><div class="card-head"><h3 id="events">Event Pipeline</h3><span class="pill ok">73% Capacity</span></div>
+          <ul class="list">
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-glass-cheers"></i></div>
+              <div>
+                <strong>Annual Fundraising Gala</strong><br>
+                <div class="bar" role="progressbar" aria-valuenow="73" aria-valuemin="0" aria-valuemax="100" aria-label="Gala registration 73%"><span style="width:73%"></span></div>
+                <small style="color:var(--text-subtle)">146/200 registered</small>
+              </div>
+              <strong>$87k</strong>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-clipboard-list"></i></div>
+              <div>
+                <strong>Board Meeting</strong><br>
+                <small style="color:var(--text-subtle)">Private • 12 attendees</small>
+              </div>
+              <span class="pill warn">High</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-users"></i></div>
+              <div>
+                <strong>Volunteer Training</strong><br>
+                <small style="color:var(--text-subtle)">Nov 28, 2024 • 24/30 spots filled</small>
+              </div>
+              <span class="pill ok">Medium</span>
+            </li>
+          </ul>
+        </article>
+        <article class="card" aria-labelledby="recommendations"><div class="card-head"><h3 id="recommendations">Smart Recommendations</h3><span class="pill ok"><i class="fas fa-bullseye" aria-hidden="true"></i> AI Insights</span></div>
+          <ul class="list">
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-rocket"></i></div>
+              <div>
+                <div>Optimize Donation Flow</div>
+                <small style="color:var(--text-subtle)">Users drop off at step 2. Simplify the form.</small>
+              </div>
+              <button class="btn">Fix</button>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-mobile-alt"></i></div>
+              <div>
+                <div>Mobile Event Registration</div>
+                <small style="color:var(--text-subtle)">Add mobile signup for gala page.</small>
+              </div>
+              <button class="btn">Implement</button>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-envelope"></i></div>
+              <div>
+                <div>Email Campaign Opportunity</div>
+                <small style="color:var(--text-subtle)">Target lapsed donors (312 contacts).</small>
+              </div>
+              <button class="btn">Send</button>
+            </li>
+          </ul>
+        </article>
+
+        <article class="card" aria-labelledby="seo-overview"><div class="card-head"><h3 id="seo-overview">SEO Overview</h3><span class="pill ok">92 Score</span></div>
+          <ul class="list">
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-tags"></i></div>
+              <div>
+                <div>Meta descriptions</div>
+                <small style="color:var(--text-subtle)">95% complete</small>
+              </div>
+              <span class="pill ok">Good</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-link"></i></div>
+              <div>
+                <div>Broken links</div>
+                <small style="color:var(--text-subtle)">4 detected</small>
+              </div>
+              <span class="pill warn">Fix</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-sitemap"></i></div>
+              <div>
+                <div>Sitemap</div>
+                <small style="color:var(--text-subtle)">Up to date</small>
+              </div>
+              <span class="pill ok">Live</span>
+            </li>
+          </ul>
+        </article>
+
+        <article class="card" aria-labelledby="a11y-overview"><div class="card-head"><h3 id="a11y-overview">Accessibility</h3><span class="pill warn">AA</span></div>
+          <ul class="list">
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-adjust"></i></div>
+              <div>
+                <div>Contrast issues</div>
+                <small style="color:var(--text-subtle)">3 pages affected</small>
+              </div>
+              <span class="pill warn">Review</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-image"></i></div>
+              <div>
+                <div>Missing alt text</div>
+                <small style="color:var(--text-subtle)">5 images</small>
+              </div>
+              <span class="pill bad">Fix</span>
+            </li>
+            <li>
+              <div class="avatar" aria-hidden="true"><i class="fas fa-universal-access"></i></div>
+              <div>
+                <div>ARIA landmarks</div>
+                <small style="color:var(--text-subtle)">Complete</small>
+              </div>
+              <span class="pill ok">Good</span>
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="card" style="margin-top:1rem" aria-labelledby="quick-actions">
+        <div class="card-head"><h3 id="quick-actions">Quick Actions</h3></div>
+        <div class="actions">
+          <a href="#" class="btn primary"><i class="fas fa-plus" aria-hidden="true"></i> Create New Page</a>
+          <a href="#" class="btn"><i class="fas fa-calendar-plus" aria-hidden="true"></i> Add Event</a>
+          <a href="#" class="btn"><i class="fas fa-pen" aria-hidden="true"></i> Write Blog Post</a>
+          <a href="#" class="btn"><i class="fas fa-chart-line" aria-hidden="true"></i> View Full Analytics</a>
+          <a href="#" class="btn"><i class="fas fa-heart" aria-hidden="true"></i> Manage Donations</a>
+          <a href="#" class="btn"><i class="fas fa-users" aria-hidden="true"></i> Update Member Directory</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite" id="toast">Copied link to clipboard</div>
+
+  <script>
+    // Search suggestions: basic a11y behavior
+    (function(){
+      const input = document.getElementById('q');
+      const sug = document.getElementById('sug');
+      const items = Array.from(sug.querySelectorAll('button'));
+      let idx = -1;
+      input.addEventListener('focus', ()=>{ sug.setAttribute('aria-expanded','true'); sug.style.display='block'; input.setAttribute('aria-expanded','true'); });
+      input.addEventListener('blur', ()=>{ setTimeout(()=>{ sug.setAttribute('aria-expanded','false'); sug.style.display='none'; input.setAttribute('aria-expanded','false'); }, 150); });
+      input.addEventListener('keydown', (e)=>{
+        if(['ArrowDown','ArrowUp'].includes(e.key)){
+          e.preventDefault();
+          idx = e.key==='ArrowDown' ? Math.min(idx+1, items.length-1) : Math.max(idx-1, 0);
+          items.forEach((el,i)=>el.setAttribute('aria-selected', i===idx));
+          items[idx]?.focus();
+        } else if(e.key==='Enter' && idx>-1) {
+          input.value = items[idx].textContent.replace(/^\p{Emoji_Presentation}?\s*/u,'');
+          input.blur();
+        }
+      });
+      items.forEach(btn=>btn.addEventListener('click', ()=>{
+        input.value = btn.textContent; input.focus();
+      }));
+    })();
+
+    // Fake chart drawing (progressive enhancement). Replace with real chart lib later.
+    (function(){
+      const el = document.getElementById('trafficChart');
+      if (!el) return;
+      const c = document.createElement('canvas');
+      c.width = el.clientWidth; c.height = el.clientHeight; el.textContent=''; el.appendChild(c);
+      const ctx = c.getContext('2d');
+      const w = c.width, h = c.height, pad = 24;
+      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-subtle');
+      ctx.font = '12px system-ui';
+      ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--brand');
+      ctx.lineWidth = 2;
+      // axes
+      ctx.beginPath(); ctx.moveTo(pad,h-pad); ctx.lineTo(w-pad,h-pad); ctx.moveTo(pad,h-pad); ctx.lineTo(pad,pad); ctx.stroke();
+      // line
+      const points = Array.from({length: 30}, (_,i)=>({x: pad + i*((w-2*pad)/29), y: pad + Math.random()*(h-2*pad)}));
+      ctx.beginPath(); points.forEach((p,i)=> i? ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.stroke();
+    })();
+
+    // Tiny toast helper
+    function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.dataset.show=true; setTimeout(()=>{t.dataset.show=false},1800); }
+  </script>
+</body>
+</html>
